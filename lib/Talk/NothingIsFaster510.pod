@@ -1,0 +1,101 @@
+=head1 NOTHING is faster in 5.10
+
+E<AElig>var ArnfjE<ouml>rE<eth> Bjarmason <avar@cpan.org>
+
+=head1 split optimizations
+
+Handled by custom C code in C<pp_split>. Will never reach the regex
+engine (see B<perlreapi.pod>)
+
+=begin perl
+
+    my @char = split //, $text; # NEW!
+
+    my @word = split /\s+/, $text;
+
+    my @line = split /^/, $text;
+
+    # Hands in the air if you know what this does
+    my @what = split ' ', $text;
+
+=end perl
+
+=head1 The benchmark
+
+=begin perl
+
+use Benchmark ':all';
+
+my $str = ("hlagh" x 666);
+
+cmpthese(-1, {
+    old  => sub { split /(?:)/, $str },
+    new  => sub { split //, $str },
+    pack => sub { unpack "(a)*", $str },
+});
+
+=end perl
+
+=head1 Benchmark results
+
+The new C<split //> is around 3x faster than it was in 5.8.8
+
+=begin perl
+
+    old  => sub { split /(?:)/, $str },
+    new  => sub { split //, $str },
+    pack => sub { unpack "(a)*", $str },
+
+=end perl
+
+=begin text
+
+          Rate  old pack  new
+    old  197/s   -- -58% -70%
+    pack 465/s 136%   -- -28%
+    new  649/s 229%  40%   --
+
+=end text
+
+=cut
+
+=head1 The benchmark lies...
+
+...unless you compiled with C<-DSTUPID_PATTERN_CHECKS>
+
+=begin text
+
+$ perl5.9.5 -Mre=Debug,DUMP -e '//; /(?:)/'
+Compiling REx ""
+Final program:
+   1: NOTHING (2)
+   2: END (0)
+minlen 0
+Compiling REx "(?:)"
+Final program:
+   1: NOTHING (2)
+   2: END (0)
+minlen 0
+
+=end text
+
+=head1 split is rarely the bottleneck
+
+=begin perl
+
+    old      => sub { () = map { chr } split /(?:)/, $str },
+    new      => sub { () = map { chr } split //, $str },
+    pack     => sub { () = unpack "(C)*", $str },
+
+=end perl
+
+=begin text
+
+           Rate  old  new pack
+    old  81.5/s   -- -29% -89%
+    new   114/s  40%   -- -84%
+    pack  718/s 781% 528%   --
+
+=end text
+
+=cut

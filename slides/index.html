@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>NOTHING is faster in 5.10</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
+<meta name="generator" content="pod2s5 0.07" />
+<meta name="generator" content="S5" />
+<meta name="version" content="S5 1.1" />
+<meta name="presdate" content="Fri Aug 10 18:07:32 2007" />
+<meta name="author" content="Ã†var ArnfjÃ¶rÃ° Bjarmason" />
+<meta name="company" content="&nbsp;" />
+<!-- configuration parameters -->
+<meta name="defaultView" content="slideshow" />
+<meta name="controlVis" content="hidden" />
+<!-- style sheet links -->
+<link rel="stylesheet" href="ui/yatil/slides.css" type="text/css" media="projection" id="slideProj" />
+<link rel="stylesheet" href="ui/default/outline.css" type="text/css" media="screen" id="outlineStyle" />
+<link rel="stylesheet" href="ui/default/print.css" type="text/css" media="print" id="slidePrint" />
+<link rel="stylesheet" href="ui/default/opera.css" type="text/css" media="projection" id="operaFix" />
+
+<!-- embedded styles -->
+<style type="text/css" media="all">
+.imgcon {width: 525px; margin: 0 auto; padding: 0; text-align: center;}
+#anim {width: 270px; height: 320px; position: relative; margin-top: 0.5em;}
+#anim img {position: absolute; top: 42px; left: 24px;}
+img#me01 {top: 0; left: 0;}
+img#me02 {left: 23px;}
+img#me04 {top: 44px;}
+img#me05 {top: 43px;left: 36px;}
+</style>
+<!-- S5 JS -->
+<script src="ui/default/slides.js" type="text/javascript"></script>
+<!--
+   tom AT cpan.org:
+   this will not work, it's not contained
+   in the downloadable S5
+   <script src="/mint/?js" type="text/javascript"></script></head>
+-->
+<body>
+
+<div class="layout">
+
+<div id="controls"></div>
+<div id="currentSlide"></div>
+<div id="header"></div>
+<div id="footer">
+<h1>t &#8226; Fri Aug 10 18:07:32 2007</h1>
+<h2>NOTHING is faster in 5.10</h2></div>
+</div><div class="slide">
+<h1>NOTHING is faster in 5.10
+
+</h1><p>Ævar Arnfjörð Bjarmason <avar@cpan.org>
+
+</p></div>
+<div class="slide">
+<h1>split optimizations
+
+</h1><p>Handled by custom C code in <code>pp_split</code>. Will never reach the regex
+engine (see <b>perlreapi.pod</b>)
+
+</p>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@char</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$text</font>;&nbsp;<font color="#7f7f7f"><i>#&nbsp;NEW!</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@word</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#007f00">\s</font><font color="#ff00ff">+</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$text</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@line</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$text</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;Hands&nbsp;in&nbsp;the&nbsp;air&nbsp;if&nbsp;you&nbsp;know&nbsp;what&nbsp;this&nbsp;does</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@what</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">'</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">'</font>,&nbsp;<font color="#0000ff">$text</font>;<BR>
+<BR>
+</div>
+<div class="slide">
+<h1>The benchmark
+
+</h1><b>use</b>&nbsp;Benchmark&nbsp;<font color="#ffa500">'</font><font color="#ff0000">:all</font><font color="#ffa500">'</font>;<BR>
+<BR>
+<b>my</b>&nbsp;<font color="#0000ff">$str</font>&nbsp;=&nbsp;(<font color="#ffa500">"</font><font color="#ff0000">hlagh</font><font color="#ffa500">"</font>&nbsp;x&nbsp;<font color="#00007f">666</font>);<BR>
+<BR>
+cmpthese(<font color="#00007f">-1</font>,&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">(?:)</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;new&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pack</font>&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">unpack</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">(a)*</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+});<BR>
+<BR>
+</div>
+<div class="slide">
+<h1>Benchmark results
+
+</h1><p>The new <code>split //</code> is around 3x faster than it was in 5.8.8
+
+</p>&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">(?:)</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;new&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pack</font>&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">unpack</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">(a)*</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+<BR>
+<pre>          Rate  old pack  new
+    old  197/s   -- -58% -70%
+    pack 465/s 136%   -- -28%
+    new  649/s 229%  40%   -- </pre></div>
+<div class="slide">
+<h1>The benchmark lies...
+
+</h1><p>...unless you compiled with <code>-DSTUPID_PATTERN_CHECKS</code>
+
+</p><pre>$ perl5.9.5 -Mre=Debug,DUMP -e '//; /(?:)/'
+Compiling REx ""
+Final program:
+   1: NOTHING (2)
+   2: END (0)
+minlen 0
+Compiling REx "(?:)"
+Final program:
+   1: NOTHING (2)
+   2: END (0)
+minlen 0 </pre></div>
+<div class="slide">
+<h1>split is rarely the bottleneck
+
+</h1>&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">map</font>&nbsp;{&nbsp;<font color="#007f00">chr</font>&nbsp;}&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">(?:)</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;new&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">map</font>&nbsp;{&nbsp;<font color="#007f00">chr</font>&nbsp;}&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pack</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">unpack</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">(C)*</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+<BR>
+<pre>           Rate  old  new pack
+    old  81.5/s   -- -29% -89%
+    new   114/s  40%   -- -84%
+    pack  718/s 781% 528%   -- </pre></div></body></html>

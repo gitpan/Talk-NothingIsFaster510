@@ -1,0 +1,101 @@
+diff -ru perl-current/pod/perlreapi.pod blead/pod/perlreapi.pod
+--- perl-current/pod/perlreapi.pod	2007-06-29 06:28:17.000000000 +0000
++++ blead/pod/perlreapi.pod	2007-08-09 06:51:11.000000000 +0000
+@@ -188,6 +188,16 @@
+ 
+ Perl's engine sets this flag if the pattern is C<\s+>.
+ 
++=item RXf_NULL
++
++Tells the split operatior to split the target string on
++characters. The definition of character varies depending on whether
++the target string is a UTF-8 string.
++
++Perl's engine sets this flag on empty patterns, this optimization
++makes C<split //> much faster than it would otherwise be, it's even
++faster than C<unpack>.
++
+ =back
+ 
+ =head2 exec
+diff -ru perl-current/pp.c blead/pp.c
+--- perl-current/pp.c	2007-06-14 11:10:48.000000000 +0000
++++ blead/pp.c	2007-08-09 07:46:58.000000000 +0000
+@@ -4711,6 +4711,43 @@
+ 	    s = m;
+ 	}
+     }
++    else if (rx->extflags & RXf_NULL && !(s >= strend)) {
++        /*
++          Pre-extend the stack, either the number of bytes or
++          characters in the string or a limited amount, triggered by:
++
++          my ($x, $y) = split //, $str;
++            or
++          split //, $str, $i;
++        */
++        const U32 items = limit - 1; 
++        if (items < slen)
++            EXTEND(SP, items);
++        else
++            EXTEND(SP, slen);
++
++        while (--limit) {
++            m = s;
++            
++            if (do_utf8)
++                s += UTF8SKIP(s);
++            else
++                ++s;
++
++            dstr = newSVpvn(m, s-m);
++
++            if (make_mortal)
++                sv_2mortal(dstr);
++            if (do_utf8)
++                (void)SvUTF8_on(dstr);
++
++            PUSHs(dstr);
++
++            /* are we there yet? */
++            if (s >= strend)
++                break;
++        }
++    }
+     else if (do_utf8 == ((rx->extflags & RXf_UTF8) != 0) &&
+ 	     (rx->extflags & RXf_USE_INTUIT) && !rx->nparens
+ 	     && (rx->extflags & RXf_CHECK_ALL)
+diff -ru perl-current/regcomp.c blead/regcomp.c
+--- perl-current/regcomp.c	2007-07-03 14:28:37.000000000 +0000
++++ blead/regcomp.c	2007-08-09 06:51:11.000000000 +0000
+@@ -4753,6 +4753,8 @@
+         r->paren_names = NULL;
+ 
+ #ifdef STUPID_PATTERN_CHECKS            
++    if (r->prelen == 0)
++        r->extflags |= RXf_NULL;
+     if (r->extflags & RXf_SPLIT && r->prelen == 1 && r->precomp[0] == ' ')
+         /* XXX: this should happen BEFORE we compile */
+         r->extflags |= (RXf_SKIPWHITE|RXf_WHITE); 
+@@ -4769,7 +4771,9 @@
+         U8 fop = OP(first);
+         U8 nop = OP(NEXTOPER(first));
+         
+-         if (PL_regkind[fop] == BOL && nop == END) 
++        if (PL_regkind[fop] == NOTHING && nop == END)
++            r->extflags |= RXf_NULL;
++        else if (PL_regkind[fop] == BOL && nop == END)
+             r->extflags |= RXf_START_ONLY;
+         else if (fop == PLUS && nop ==SPACE && OP(regnext(first))==END)
+             r->extflags |= RXf_WHITE;    
+diff -ru perl-current/regexp.h blead/regexp.h
+--- perl-current/regexp.h	2007-06-30 15:40:32.000000000 +0000
++++ blead/regexp.h	2007-08-09 06:51:11.000000000 +0000
+@@ -240,6 +240,7 @@
+ #define RXf_SKIPWHITE		0x00000100 /* Pattern is for a split / / */
+ #define RXf_START_ONLY		0x00000200 /* Pattern is /^/ */
+ #define RXf_WHITE		0x00000400 /* Pattern is /\s+/ */
++#define RXf_NULL		0x40000000 /* Pattern is // */
+ 
+ /* 0x1F800 of extflags is used by (RXf_)PMf_COMPILETIME */
+ #define RXf_PMf_LOCALE  	0x00000800 /* use locale */
