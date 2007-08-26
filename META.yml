@@ -15,4 +15,4 @@ no_index:
     - inc
     - t
 tests: t/*.t
-version: 0.01
+version: 0.02

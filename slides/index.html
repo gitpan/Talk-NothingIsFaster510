@@ -9,7 +9,7 @@
 <meta name="generator" content="pod2s5 0.07" />
 <meta name="generator" content="S5" />
 <meta name="version" content="S5 1.1" />
-<meta name="presdate" content="Fri Aug 10 18:07:32 2007" />
+<meta name="presdate" content="Sun Aug 26 22:19:58 2007" />
 <meta name="author" content="Ævar Arnfjörð Bjarmason" />
 <meta name="company" content="&nbsp;" />
 <!-- configuration parameters -->
@@ -47,7 +47,7 @@ img#me05 {top: 43px;left: 36px;}
 <div id="currentSlide"></div>
 <div id="header"></div>
 <div id="footer">
-<h1>t &#8226; Fri Aug 10 18:07:32 2007</h1>
+<h1>t &#8226; Sun Aug 26 22:19:58 2007</h1>
 <h2>NOTHING is faster in 5.10</h2></div>
 </div><div class="slide">
 <h1>NOTHING is faster in 5.10
@@ -61,12 +61,12 @@ img#me05 {top: 43px;left: 36px;}
 </h1><p>Handled by custom C code in <code>pp_split</code>. Will never reach the regex
 engine (see <b>perlreapi.pod</b>)
 
-</p>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@char</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$text</font>;&nbsp;<font color="#7f7f7f"><i>#&nbsp;NEW!</i></font><font color="#7f7f7f"><i><BR>
-</i></font><BR>
+</p>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@line</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$text</font>;<BR>
+<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@word</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#007f00">\s</font><font color="#ff00ff">+</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$text</font>;<BR>
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@line</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$text</font>;<BR>
-<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@char</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$text</font>;&nbsp;<font color="#7f7f7f"><i>#&nbsp;NEW!</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;Hands&nbsp;in&nbsp;the&nbsp;air&nbsp;if&nbsp;you&nbsp;know&nbsp;what&nbsp;this&nbsp;does</i></font><font color="#7f7f7f"><i><BR>
 </i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@what</font>&nbsp;=&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">'</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">'</font>,&nbsp;<font color="#0000ff">$text</font>;<BR>
 <BR>
@@ -79,7 +79,7 @@ engine (see <b>perlreapi.pod</b>)
 <b>my</b>&nbsp;<font color="#0000ff">$str</font>&nbsp;=&nbsp;(<font color="#ffa500">"</font><font color="#ff0000">hlagh</font><font color="#ffa500">"</font>&nbsp;x&nbsp;<font color="#00007f">666</font>);<BR>
 <BR>
 cmpthese(<font color="#00007f">-1</font>,&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">(?:)</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#b03060">&nbsp;</font><font color="#ffa500">/x</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;new&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pack</font>&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">unpack</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">(a)*</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
 });<BR>
@@ -90,26 +90,28 @@ cmpthese(<font color="#00007f">-1</font>,&nbsp;{<BR>
 
 </h1><p>The new <code>split //</code> is around 3x faster than it was in 5.8.8
 
-</p>&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">(?:)</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+</p>&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#b03060">&nbsp;</font><font color="#ffa500">/x</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;new&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pack</font>&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;<font color="#007f00">unpack</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">(a)*</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
 <BR>
 <pre>          Rate  old pack  new
-    old  197/s   -- -58% -70%
-    pack 465/s 136%   -- -28%
-    new  649/s 229%  40%   -- </pre></div>
+    old  182/s   -- -61% -72%
+    pack 473/s 160%   -- -28%
+    new  661/s 262%  40%   -- </pre></div>
 <div class="slide">
 <h1>The benchmark lies...
 
 </h1><p>...unless you compiled with <code>-DSTUPID_PATTERN_CHECKS</code>
 
-</p><pre>$ perl5.9.5 -Mre=Debug,DUMP -e '//; /(?:)/'
+</p><p>./Configure -A ccflags=-DSTUPID_PATTERN_CHECKS
+
+</p><pre>$ perl5.9.5 -Mre=Debug,DUMP -e '//; /(?#I CAN HAS OPTIMIZE?!)/'
 Compiling REx ""
 Final program:
    1: NOTHING (2)
    2: END (0)
 minlen 0
-Compiling REx "(?:)"
+Compiling REx "(?#I CAN HAS OPTIMIZE?!)"
 Final program:
    1: NOTHING (2)
    2: END (0)
@@ -117,11 +119,11 @@ minlen 0 </pre></div>
 <div class="slide">
 <h1>split is rarely the bottleneck
 
-</h1>&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">map</font>&nbsp;{&nbsp;<font color="#007f00">chr</font>&nbsp;}&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">(?:)</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;new&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">map</font>&nbsp;{&nbsp;<font color="#007f00">chr</font>&nbsp;}&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pack</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">unpack</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">(C)*</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+</h1>&nbsp;&nbsp;&nbsp;&nbsp;old&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">map</font>&nbsp;{&nbsp;<font color="#007f00">chr</font>&nbsp;}&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">(?:)</font><font color="#ffa500">/x</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;new&nbsp;&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">map</font>&nbsp;{&nbsp;<font color="#007f00">chr</font>&nbsp;}&nbsp;<font color="#007f00">split</font>&nbsp;<font color="#ffa500">//</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pack</font>&nbsp;=&gt;&nbsp;<b>sub&nbsp;</b>{&nbsp;()&nbsp;=&nbsp;<font color="#007f00">unpack</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">(C)*</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$str</font>&nbsp;},<BR>
 <BR>
 <pre>           Rate  old  new pack
-    old  81.5/s   -- -29% -89%
-    new   114/s  40%   -- -84%
-    pack  718/s 781% 528%   -- </pre></div></body></html>
+    old  80.7/s   -- -31% -89%
+    new   117/s  45%   -- -84%
+    pack  725/s 798% 518%   -- </pre></div></body></html>

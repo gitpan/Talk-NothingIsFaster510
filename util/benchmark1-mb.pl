@@ -1,6 +1,7 @@
+use utf8;
 use Benchmark ':all';
 
-my $str = ("hlagh" x 666);
+my $str = ("hĺáǵh" x 666);
 
 cmpthese(-1, {
     old  => sub { split / /x, $str },

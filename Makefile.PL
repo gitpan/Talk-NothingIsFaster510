@@ -5,7 +5,7 @@ name 'Talk-NothingIsFaster510';
 
 author   'Ævar Arnfjörð Bjarmason <avar@cpan.org>';
 abstract 'A lightning talk about the C<split //> optimization in perl 5.10';
-version  '0.01';
+version  '0.02';
 license  'perl';
 
 #requires 'Pod::S5' => 0;

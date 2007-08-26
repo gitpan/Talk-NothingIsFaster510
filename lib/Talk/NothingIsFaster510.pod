@@ -9,11 +9,11 @@ engine (see B<perlreapi.pod>)
 
 =begin perl
 
-    my @char = split //, $text; # NEW!
+    my @line = split /^/, $text;
 
     my @word = split /\s+/, $text;
 
-    my @line = split /^/, $text;
+    my @char = split //, $text; # NEW!
 
     # Hands in the air if you know what this does
     my @what = split ' ', $text;
@@ -29,7 +29,7 @@ use Benchmark ':all';
 my $str = ("hlagh" x 666);
 
 cmpthese(-1, {
-    old  => sub { split /(?:)/, $str },
+    old  => sub { split / /x, $str },
     new  => sub { split //, $str },
     pack => sub { unpack "(a)*", $str },
 });
@@ -42,7 +42,7 @@ The new C<split //> is around 3x faster than it was in 5.8.8
 
 =begin perl
 
-    old  => sub { split /(?:)/, $str },
+    old  => sub { split / /x, $str },
     new  => sub { split //, $str },
     pack => sub { unpack "(a)*", $str },
 
@@ -51,9 +51,9 @@ The new C<split //> is around 3x faster than it was in 5.8.8
 =begin text
 
           Rate  old pack  new
-    old  197/s   -- -58% -70%
-    pack 465/s 136%   -- -28%
-    new  649/s 229%  40%   --
+    old  182/s   -- -61% -72%
+    pack 473/s 160%   -- -28%
+    new  661/s 262%  40%   --
 
 =end text
 
@@ -63,15 +63,17 @@ The new C<split //> is around 3x faster than it was in 5.8.8
 
 ...unless you compiled with C<-DSTUPID_PATTERN_CHECKS>
 
+./Configure -A ccflags=-DSTUPID_PATTERN_CHECKS
+
 =begin text
 
-$ perl5.9.5 -Mre=Debug,DUMP -e '//; /(?:)/'
+$ perl5.9.5 -Mre=Debug,DUMP -e '//; /(?#I CAN HAS OPTIMIZE?!)/'
 Compiling REx ""
 Final program:
    1: NOTHING (2)
    2: END (0)
 minlen 0
-Compiling REx "(?:)"
+Compiling REx "(?#I CAN HAS OPTIMIZE?!)"
 Final program:
    1: NOTHING (2)
    2: END (0)
@@ -83,18 +85,18 @@ minlen 0
 
 =begin perl
 
-    old      => sub { () = map { chr } split /(?:)/, $str },
-    new      => sub { () = map { chr } split //, $str },
-    pack     => sub { () = unpack "(C)*", $str },
+    old  => sub { () = map { chr } split /(?:)/x, $str },
+    new  => sub { () = map { chr } split //, $str },
+    pack => sub { () = unpack "(C)*", $str },
 
 =end perl
 
 =begin text
 
            Rate  old  new pack
-    old  81.5/s   -- -29% -89%
-    new   114/s  40%   -- -84%
-    pack  718/s 781% 528%   --
+    old  80.7/s   -- -31% -89%
+    new   117/s  45%   -- -84%
+    pack  725/s 798% 518%   --
 
 =end text
 

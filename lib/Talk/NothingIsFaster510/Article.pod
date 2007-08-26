@@ -1,0 +1,158 @@
+=head1 5.10 split // optimization
+
+The C<unpack> and C<split> operators provide two ways to split up a
+scalar in Perl. C<unpack> operates on its own special format while
+split accepts a Perl regular expression.
+
+The perl interpreter speeds up split for the common cases of splitting
+by lines or words by having them handled by special case C code,
+bypassing the regex engine altogether. perl 5.10 saw the introduction
+of a fourth optimization to speed up splitting by characters (C<split
+//>) which is the topic of this article.
+
+=head1 Optimized cases
+
+As an optimization splitting by lines, words or characters is handled
+by special case C code in the pp_split function rather than the regex
+engine. None of the following examples will touch the regex engine:
+
+    my @lines = split /^/;
+    my @words = split /\s+/;
+    my @chars = split //; # new in 5.9.5
+
+There's also a fourth case which is just a variant of C<split /\s+/>
+which also strips leading whitespace from the string:
+
+    # Like split /\s+/ but with leading whitespace stripped
+    my @words = split " ", $str;
+
+Before 5.10 the primitive optimizer used to look at the literal string
+of the regex instead of its compiled internal form, thus C<split /^/>
+would be faster than C<split /^ /x> even though the two were logically
+equivalent. 5.10 is smarter about it and will look at the internal
+form, if a regex consists of the opcodes C<NOTHING> and C<END> it will
+be optimized regardless of any whitespace, comments etc. in the source
+text representation.
+
+    $ perl5.9.5 -Mre=debug,DUMP -e "qr/(?# Can't fool me )/x"
+    Compiling REx "(?# Can't fool me )"
+    Final program:
+       1: NOTHING (2)
+       2: END (0)
+    minlen 0
+
+=head1 Anatomy of the optimization
+
+Perl_re_compile in regcomp.c:
+
+    if (PL_regkind[fop] == NOTHING && nop == END)
+        r->extflags |= RXf_NULL;
+
+Perl_pp_split in pp.c:
+
+First variables are set up which record the boundry of the string and
+its character and byte length:
+
+    /* The string being splitted */
+    SV *sv = POPs;
+
+    /* String length in bytes */
+    STRLEN len;
+
+    /* Pointer to the beginning of the string, record the length in `len' */
+    char *s = SvPV_const(sv, len);
+
+    /* Pointer to the end of the string */
+    char *strend = s + len;
+
+    /* Should we care about utf8? */
+    bool do_utf8 = DO_UTF8(sv);
+
+    /* String length in characters or bytes */
+    const STRLEN slen = do_utf8 ? utf8_length((U8*)s, (U8*)strend) : (STRLEN)(strend - s);
+
+The stack is then pre-extended to fit the number items to be put on
+it. C<items> is the number of items split should return and C<slen> is
+the string length in characters under utf8 mode and in bytes
+otherwise:
+
+    if (items < slen)
+        EXTEND(SP, items);
+    else
+        EXTEND(SP, slen);
+
+split // for a non-utf8 string is simple, we know that 1 character is
+always one byte so it's just a matter of making a new scalar for each
+character in the string and pushing it onto the stack:
+
+    while (--limit) {
+        /* We know that 1 character = 1 byte */
+        dstr = newSVpvn(s++, 1);
+
+        /* Add the string to the return values */
+        PUSHs(dstr);
+
+        /* Bail out when we reach the end of the string */
+        if (s >= strend)
+            break;
+    }
+
+The equivalent utf8-aware case is slightly more complex, we don't know
+that one character is a one byte and after we create the scalar we
+returning we have to tell it that its contents are ane utf8 string:
+
+    while (--limit) {
+        /* We don't know how many bytes make up the next character,
+           skip over the next character and make a note of how far we went
+         */
+        m = s;
+        s += UTF8SKIP(s);
+        dstr = newSVpvn(m, s-m);
+
+        /* Tell the scalar we just created that it's utf8 */
+        SvUTF8_on(dstr);
+
+        PUSHs(dstr);
+
+        if (s >= strend)
+            break;
+    }
+
+=head1 Benchmark
+
+    use Benchmark ':all';
+
+    my $str = ("hlagh" x 666);
+
+    cmpthese(-1, {
+        old  => sub { split / /x, $str },
+        new  => sub { split //, $str },
+        pack => sub { unpack "(a)*", $str },
+    });
+
+As I mentioned earlier perl is not easily fooled by equivalent
+patterns which compile to the same opcodes. To make this benchmark
+work I had to compile perl with the following configure line:
+
+    ./Configure -A ccflags=-DSTUPID_PATTERN_CHECKS
+
+This turns on I<dumb> pattern checks which DWIM in this case.
+
+Running this yields the following results:
+
+          Rate  old pack  new
+    old  182/s   -- -61% -72%
+    pack 473/s 160%   -- -28%
+    new  661/s 262%  40%   --
+
+The new C<split //> is more than three times faster than the old one
+and around 40% faster than unpack on the same data.
+
+=head1 LICENSE
+
+Copyright 2007 E<AElig>var ArnfjE<ouml>rE<eth> Bjarmason.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
